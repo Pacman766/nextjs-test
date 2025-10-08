@@ -1,9 +1,9 @@
-Отлично — ниже простой, понятный и **рабочий** пример авторизации в Next.js (App Router) с настоящими HTTP-Only cookies и пошаговым объяснением что и где происходит. Я покажу:
+Авторизация в Next.js (App Router)
 
-* минимальные route-handlers для `login` / `logout` / `profile` (серверные API);
-* страницу входа (клиентский компонент), серверную защищённую страницу;
-* опциональную `middleware` для перенаправления неавторизованных пользователей;
-* потом — пошагово что происходит и важные замечания по безопасности.
+- минимальные route-handlers для `login` / `logout` / `profile` (серверные API);
+- страницу входа (клиентский компонент), серверную защищённую страницу;
+- опциональную `middleware` для перенаправления неавторизованных пользователей;
+- потом — пошагово что происходит и важные замечания по безопасности.
 
 > Примечание: в примерах для простоты я использую «демо-токен». В реальном приложении храните сессии безопасно (подписанные JWT / session store) и используйте HTTPS.
 
@@ -33,24 +33,27 @@ middleware.ts         -> (опционально) защита маршруто�
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const { username, password } = await req.json();
+	const { username, password } = await req.json();
 
-  // === Примитивная проверка (только для примера) ===
-  if (username === 'user' && password === 'pass') {
-    // В продакшне: sign JWT или создайте session id и сохраните на сервере
-    const token = 'demo-signed-token-xxx';
+	// === Примитивная проверка (только для примера) ===
+	if (username === 'user' && password === 'pass') {
+		// В продакшне: sign JWT или создайте session id и сохраните на сервере
+		const token = 'demo-signed-token-xxx';
 
-    // Собираем Set-Cookie строку
-    // Важно: для локальной разработки учтите флаг Secure (см. пояснения ниже)
-    const cookie = `token=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${60 * 60 * 24}`;
+		// Собираем Set-Cookie строку
+		// Важно: для локальной разработки учтите флаг Secure (см. пояснения ниже)
+		const cookie = `token=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${60 * 60 * 24}`;
 
-    return NextResponse.json({ ok: true }, {
-      status: 200,
-      headers: { 'Set-Cookie': cookie }
-    });
-  }
+		return NextResponse.json(
+			{ ok: true },
+			{
+				status: 200,
+				headers: { 'Set-Cookie': cookie },
+			}
+		);
+	}
 
-  return NextResponse.json({ ok: false, message: 'Invalid credentials' }, { status: 401 });
+	return NextResponse.json({ ok: false, message: 'Invalid credentials' }, { status: 401 });
 }
 ```
 
@@ -61,11 +64,14 @@ export async function POST(req: Request) {
 import { NextResponse } from 'next/server';
 
 export async function POST() {
-  const cookie = `token=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-  return NextResponse.json({ ok: true }, {
-    status: 200,
-    headers: { 'Set-Cookie': cookie }
-  });
+	const cookie = `token=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+	return NextResponse.json(
+		{ ok: true },
+		{
+			status: 200,
+			headers: { 'Set-Cookie': cookie },
+		}
+	);
 }
 ```
 
@@ -77,11 +83,11 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 export async function GET() {
-  const token = cookies().get('token')?.value;
-  if (!token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+	const token = cookies().get('token')?.value;
+	if (!token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  // В реальности: валидируйте token (JWT verify или lookup в session store)
-  return NextResponse.json({ name: 'Demo user', email: 'demo@example.com' });
+	// В реальности: валидируйте token (JWT verify или lookup в session store)
+	return NextResponse.json({ name: 'Demo user', email: 'demo@example.com' });
 }
 ```
 
@@ -94,35 +100,35 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const router = useRouter();
+	const [username, setUsername] = useState('');
+	const [password, setPassword] = useState('');
+	const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-      // same-origin по умолчанию, но можно явно указать:
-      credentials: 'same-origin'
-    });
+	async function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		const res = await fetch('/api/login', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password }),
+			// same-origin по умолчанию, но можно явно указать:
+			credentials: 'same-origin',
+		});
 
-    if (res.ok) {
-      // Сервер установил HttpOnly cookie — JS не видит его напрямую.
-      router.push('/dashboard');
-    } else {
-      alert('Login failed');
-    }
-  }
+		if (res.ok) {
+			// Сервер установил HttpOnly cookie — JS не видит его напрямую.
+			router.push('/dashboard');
+		} else {
+			alert('Login failed');
+		}
+	}
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="user" />
-      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="pass" />
-      <button type="submit">Login</button>
-    </form>
-  );
+	return (
+		<form onSubmit={handleSubmit}>
+			<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="user" />
+			<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="pass" />
+			<button type="submit">Login</button>
+		</form>
+	);
 }
 ```
 
@@ -134,11 +140,11 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export default function DashboardPage() {
-  const token = cookies().get('token')?.value;
-  if (!token) redirect('/login'); // серверный редирект
+	const token = cookies().get('token')?.value;
+	if (!token) redirect('/login'); // серверный редирект
 
-  // Здесь можно безопасно делать server-to-server вызовы с token
-  return <div>Welcome to dashboard — you are authenticated</div>;
+	// Здесь можно безопасно делать server-to-server вызовы с token
+	return <div>Welcome to dashboard — you are authenticated</div>;
 }
 ```
 
@@ -150,13 +156,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get('token')?.value;
-  const protectedPaths = ['/dashboard', '/profile', '/account'];
+	const token = req.cookies.get('token')?.value;
+	const protectedPaths = ['/dashboard', '/profile', '/account'];
 
-  if (protectedPaths.some(p => req.nextUrl.pathname.startsWith(p)) && !token) {
-    return NextResponse.redirect(new URL('/login', req.url));
-  }
-  return NextResponse.next();
+	if (protectedPaths.some((p) => req.nextUrl.pathname.startsWith(p)) && !token) {
+		return NextResponse.redirect(new URL('/login', req.url));
+	}
+	return NextResponse.next();
 }
 
 // Опционально укажите matcher, если нужно
@@ -169,7 +175,7 @@ export const config = { matcher: ['/dashboard/:path*', '/profile/:path*'] };
 
 1. Пользователь заполняет форму и `fetch('/api/login', { method: 'POST', ... })` из клиентского компонента.
 
-   * Если запрос same-origin — браузер по умолчанию позволит серверу установить cookie из заголовка `Set-Cookie`. Если вы делаете кросс-доменный запрос, потребуется `credentials: 'include'` и корректная CORS-настройка на сервере. ([MDN Web Docs][1])
+   - Если запрос same-origin — браузер по умолчанию позволит серверу установить cookie из заголовка `Set-Cookie`. Если вы делаете кросс-доменный запрос, потребуется `credentials: 'include'` и корректная CORS-настройка на сервере. ([MDN Web Docs][1])
 
 2. В `app/api/login/route.ts` сервер проверяет учётные данные. При успехе сервер возвращает ответ **с заголовком `Set-Cookie`**, например:
 
@@ -191,12 +197,12 @@ export const config = { matcher: ['/dashboard/:path*', '/profile/:path*'] };
 
 # 4) Где часто подводят и на что обратить внимание (security & gotchas)
 
-* **HttpOnly** — защищает от XSS (скрипты не могут прочитать cookie), но не от CSRF. Если вы используете cookie для аутентификации, подумайте о CSRF-защитах (SameSite, CSRF-token для state-changing запросов).
-* **SameSite** — `Strict` или `Lax` уменьшает риск CSRF; `None` позволит third-party cookies (нужен `Secure`).
-* **Secure** — cookie с `Secure` будут сохраняться только по HTTPS. На localhost можно временно не ставить `Secure`, но в продакшне — обязательно.
-* **Подпись/шифрование** — не храните чувствительные данные в незашифрованном виде: используйте подписанные JWT или session id + server session store.
-* **Refresh tokens** — обычно используют короткоживущий access token в cookie + refresh token (хранится в httpOnly cookie или secure storage) с endpoint для обновления.
-* **Лучше использовать battle-tested библиотеку** (NextAuth, Clerk, Supabase Auth и т. п.) для продакшна — уменьшает риск ошибок. Next.js сам рекомендует готовые библиотеки для большей безопасности и удобства. ([Next.js][4])
+- **HttpOnly** — защищает от XSS (скрипты не могут прочитать cookie), но не от CSRF. Если вы используете cookie для аутентификации, подумайте о CSRF-защитах (SameSite, CSRF-token для state-changing запросов).
+- **SameSite** — `Strict` или `Lax` уменьшает риск CSRF; `None` позволит third-party cookies (нужен `Secure`).
+- **Secure** — cookie с `Secure` будут сохраняться только по HTTPS. На localhost можно временно не ставить `Secure`, но в продакшне — обязательно.
+- **Подпись/шифрование** — не храните чувствительные данные в незашифрованном виде: используйте подписанные JWT или session id + server session store.
+- **Refresh tokens** — обычно используют короткоживущий access token в cookie + refresh token (хранится в httpOnly cookie или secure storage) с endpoint для обновления.
+- **Лучше использовать battle-tested библиотеку** (NextAuth, Clerk, Supabase Auth и т. п.) для продакшна — уменьшает риск ошибок. Next.js сам рекомендует готовые библиотеки для большей безопасности и удобства. ([Next.js][4])
 
 (Браузерное поведение по `fetch` + cookies и заголовкам описано в MDN: default — credentials для same-origin; для кросс-доменных запросов используйте `credentials: 'include'` и `Access-Control-Allow-Credentials: true` на сервере). ([MDN Web Docs][1])
 
@@ -204,16 +210,16 @@ export const config = { matcher: ['/dashboard/:path*', '/profile/:path*'] };
 
 # 5) Короткий чеклист при внедрении
 
-* ✅ Используйте `HttpOnly`, `SameSite` и `Secure` в продакшне.
-* ✅ Не храните пароль/личные данные в cookie. Храните session id или подписанный токен.
-* ✅ При кросс-доменных запросах настройте CORS & `credentials`. ([MDN Web Docs][1])
-* ✅ Защитите state-changing запросы от CSRF (или используйте SameSite=strict/lax + другие меры).
-* ✅ Для продакшна рассмотрите NextAuth / внешние провайдеры. ([Next.js][4])
+- ✅ Используйте `HttpOnly`, `SameSite` и `Secure` в продакшне.
+- ✅ Не храните пароль/личные данные в cookie. Храните session id или подписанный токен.
+- ✅ При кросс-доменных запросах настройте CORS & `credentials`. ([MDN Web Docs][1])
+- ✅ Защитите state-changing запросы от CSRF (или используйте SameSite=strict/lax + другие меры).
+- ✅ Для продакшна рассмотрите NextAuth / внешние провайдеры. ([Next.js][4])
 
 ---
 
 # 6) Резюме (короче)
 
-* Сервер устанавливает cookie через `Set-Cookie` в API (route handlers). Браузер сохраняет cookie; флаг `HttpOnly` делает cookie недоступной для JS. Серверные компоненты Next.js читают cookie через `cookies()` и могут делать серверные редиректы/рендеринг на основе наличия/валидности cookie. Для защиты маршрутов можно использовать `middleware`. ([Next.js][5])
+- Сервер устанавливает cookie через `Set-Cookie` в API (route handlers). Браузер сохраняет cookie; флаг `HttpOnly` делает cookie недоступной для JS. Серверные компоненты Next.js читают cookie через `cookies()` и могут делать серверные редиректы/рендеринг на основе наличия/валидности cookie. Для защиты маршрутов можно использовать `middleware`. ([Next.js][5])
 
 ---
