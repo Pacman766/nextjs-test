@@ -1,8 +1,6 @@
-import { buildSchema } from 'graphql';
-import { createHandler } from 'graphql-http/lib/use/express';
-import { ruruHTML } from 'ruru/server';
+import { buildSchema, graphql } from 'graphql';
+import { NextRequest, NextResponse } from 'next/server';
 
-// ——— СХЕМА ———
 const schema = buildSchema(`
   type User {
     id: ID!
@@ -19,13 +17,11 @@ const schema = buildSchema(`
   }
 `);
 
-// ——— ДАННЫЕ ———
 const users = [
 	{ id: 1, name: 'Alice' },
 	{ id: 2, name: 'Bob' },
 ];
 
-// ——— РЕЗОЛВЕРЫ ———
 const root = {
 	hello: () => 'Hello from GraphQL inside Next.js 👋',
 	users: () => users,
@@ -36,15 +32,18 @@ const root = {
 	},
 };
 
-// ——— HTTP HANDLER ———
-export const { GET, POST } = createHandler({
-	schema,
-	rootValue: root,
-});
-
-// ——— Встроенный playground (GraphiQL аналог) ———
-export async function GET_playground() {
-	return new Response(ruruHTML({ endpoint: '/api/graphql' }), {
-		headers: { 'Content-Type': 'text/html' },
-	});
+export async function POST(req: NextRequest) {
+	try {
+		const { query, variables } = await req.json();
+		const response = await graphql({
+			schema,
+			source: query,
+			rootValue: root,
+			variableValues: variables,
+		});
+		return NextResponse.json(response);
+	} catch (err) {
+		console.error(err);
+		return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+	}
 }

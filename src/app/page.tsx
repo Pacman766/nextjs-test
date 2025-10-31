@@ -1,15 +1,27 @@
-// app/page.tsx (Server Component)
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { gql } from '@apollo/client/core';
+import { UsersClient } from './components/UsersClient';
+import { serverClient } from '@/lib/apolloClientServer';
+
+const GET_USERS = gql`
+	query {
+		users {
+			id
+			name
+		}
+		hello
+	}
+`;
 
 export default async function HomePage() {
-	const token = (await cookies()).get('token')?.value;
+	const { data } = await serverClient.query({ query: GET_USERS });
 
-	// Если пользователь уже авторизован → ведём в /dashboard
-	if (token) {
-		redirect('/dashboard');
-	}
+	return (
+		<main className="p-6 space-y-4">
+			<h1 className="text-2xl font-bold">Next.js + Apollo SSR + CSR 🔥</h1>
+			<p>{data.hello}</p>
 
-	// Если нет токена → перенаправляем на /login
-	redirect('/login');
+			{/* Данные с сервера + интерактив на клиенте */}
+			<UsersClient initialUsers={data.users} />
+		</main>
+	);
 }

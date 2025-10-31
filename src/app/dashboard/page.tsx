@@ -3,8 +3,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import LogoutButton from './LogoutButton';
 
-export default function DashboardPage() {
-	const token = cookies().get('token')?.value;
+export default async function DashboardPage() {
+	const token = (await cookies()).get('token')?.value;
 	if (!token) redirect('/login');
 
 	// Здесь можно запросить данные пользователя с /api/profile, если нужно

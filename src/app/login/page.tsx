@@ -27,7 +27,7 @@ export default function LoginPage() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit}>
+		<form className=' flex flex-col bg-amber-600' onSubmit={handleSubmit}>
 			<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="user" />
 			<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="pass" />
 			<button type="submit">Login</button>
