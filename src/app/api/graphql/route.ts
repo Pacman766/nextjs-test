@@ -5,6 +5,7 @@ const schema = buildSchema(`
   type User {
     id: ID!
     name: String!
+	email: String
   }
 
   type Query {
@@ -13,20 +14,20 @@ const schema = buildSchema(`
   }
 
   type Mutation {
-    addUser(name: String!): User
+    addUser(name: String! email: String!): User
   }
 `);
 
 const users = [
-	{ id: 1, name: 'Alice' },
-	{ id: 2, name: 'Bob' },
+	{ id: 1, name: 'Alice', email: 'alice@example' },
+	{ id: 2, name: 'Bob', email: 'bob@example' },
 ];
 
 const root = {
 	hello: () => 'Hello from GraphQL inside Next.js 👋',
 	users: () => users,
-	addUser: ({ name }: { name: string }) => {
-		const user = { id: users.length + 1, name };
+	addUser: ({ name, email }: { name: string, email: string }) => {
+		const user = { id: users.length + 1, name, email };
 		users.push(user);
 		return user;
 	},

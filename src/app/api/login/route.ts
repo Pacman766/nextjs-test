@@ -5,7 +5,7 @@ export async function POST(req: Request) {
 	const { username, password } = await req.json();
 
 	// === Примитивная проверка (только для примера) ===
-	if (username === 'user' && password === 'pass') {
+	if (username === '111' && password === '111') {
 		// В продакшне: sign JWT или создайте session id и сохраните на сервере
 		const token = 'demo-signed-token-xxx';
 

@@ -27,10 +27,33 @@ export default function LoginPage() {
 	}
 
 	return (
-		<form className=' flex flex-col bg-amber-600' onSubmit={handleSubmit}>
-			<input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="user" />
-			<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="pass" />
-			<button type="submit">Login</button>
-		</form>
+		<main className="flex flex-col items-center justify-center min-h-screen bg-gray-950 text-white">
+			<div className="bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-md border border-gray-800">
+				<h1 className="text-3xl font-semibold mb-6 text-center">Login</h1>
+				<form onSubmit={handleSubmit} className="flex flex-col gap-4">
+					<input
+						className="px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+						value={username}
+						onChange={(e) => setUsername(e.target.value)}
+						placeholder="user"
+						required
+					/>
+					<input
+						className="px-4 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+						type="password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						placeholder="pass"
+						required
+					/>
+					<button
+						type="submit"
+						className="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 rounded-lg transition-all"
+					>
+						Login
+					</button>
+				</form>
+			</div>
+		</main>
 	);
 }

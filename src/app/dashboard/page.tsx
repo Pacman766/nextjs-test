@@ -1,18 +1,11 @@
-// app/dashboard/page.tsx
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import LogoutButton from './LogoutButton';
+'use client';
 
-export default async function DashboardPage() {
-	const token = (await cookies()).get('token')?.value;
-	if (!token) redirect('/login');
+import { UsersClient } from '../components/UsersClient';
 
-	// Здесь можно запросить данные пользователя с /api/profile, если нужно
+export default function DashboardPage() {
 	return (
-		<main style={{ padding: 24 }}>
-			<h1>Welcome to Dashboard 🎉</h1>
-			<p>You are successfully authenticated.</p>
-			<LogoutButton />
+		<main className="flex flex-col items-center justify-center min-h-screen bg-gray-950 text-white p-6">
+			<UsersClient />
 		</main>
 	);
 }
